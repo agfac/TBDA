@@ -1,17 +1,17 @@
 --4z
-create view horas_docentes
-as
-SELECT zdocentes.nr, zdocentes.nome, tipo, sum(horas*fator) as nr_horas
-from zdocentes join zdsd on zdsd.nr = zdocentes.nr join ztiposaula on ztiposaula.id = zdsd.ID
-where ano_letivo='2003/2004'
-group by zdocentes.nr, zdocentes.nome, tipo;
+CREATE VIEW horas_docentes
+AS
+SELECT zdocentes.nr, zdocentes.nome, tipo, SUM(horas*fator) AS nr_horas
+FROM zdocentes JOIN zdsd ON zdsd.nr = zdocentes.nr JOIN ztiposaula ON ztiposaula.ID = zdsd.ID
+WHERE ano_letivo='2003/2004'
+GROUP BY zdocentes.nr, zdocentes.nome, tipo;
 
-create view max_horas_docentes
-as
-select tipo, max(nr_horas) as max_nr_horas
-from horas_docentes
-group by tipo;
+CREATE VIEW max_horas_docentes
+AS
+SELECT tipo, MAX(nr_horas) AS max_nr_horas
+FROM horas_docentes
+GROUP BY tipo;
 
-select nr, nome, max_horas_docentes.tipo, max_nr_horas
-from horas_docentes, max_horas_docentes
-where horas_docentes.tipo = max_horas_docentes.tipo and horas_docentes.nr_horas = max_horas_docentes.max_nr_horas;
+SELECT nr, nome, max_horas_docentes.tipo, max_nr_horas
+FROM horas_docentes, max_horas_docentes
+WHERE horas_docentes.tipo = max_horas_docentes.tipo AND horas_docentes.nr_horas = max_horas_docentes.max_nr_horas;

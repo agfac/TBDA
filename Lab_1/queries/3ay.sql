@@ -1,6 +1,6 @@
-select codigo
-from yucs
-where codigo not in
-(select distinct codigo 
-from ytiposaula
-where ANO_LETIVO = '2003/2004');
+SELECT codigo
+FROM yucs
+WHERE codigo NOT IN
+(SELECT DISTINCT codigo 
+FROM ytiposaula
+WHERE ano_letivo = '2003/2004');
