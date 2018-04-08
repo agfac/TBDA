@@ -1,4 +1,7 @@
 --4x
+drop view horas_docentes;
+drop view max_horas_docentes;
+
 CREATE VIEW horas_docentes
 AS
 SELECT xdocentes.nr, xdocentes.nome, tipo, SUM(horas*fator) AS nr_horas
