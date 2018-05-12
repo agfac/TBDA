@@ -20,10 +20,6 @@ DROP TYPE concelho_t;
 
 DROP TYPE distrito_t;
 
-DROP TYPE partidos;
-
-DROP TYPE freguesia_t;
-
 DROP TYPE zona_t;
 
 DROP TYPE votacoes_tab_t;
@@ -38,6 +34,10 @@ DROP TYPE lista_t;
 
 DROP TYPE partido_t;
 
+DROP TYPE partido_votos;
+
+DROP TYPE partido_mandatos;
+
 --------------------------------------------------------
 -------------------   CREATE TYPES  --------------------   
 --------------------------------------------------------
@@ -46,12 +46,22 @@ CREATE OR REPLACE TYPE partido_mandatos AS VARRAY(20) OF NUMBER(3);
 
 CREATE OR REPLACE TYPE partido_votos AS VARRAY(20) OF NUMBER(10);
 
+CREATE OR REPLACE TYPE nome_distritos AS VARRAY(20) OF VARCHAR2(50);
+
 CREATE OR REPLACE TYPE partido_t AS OBJECT(
     sigla VARCHAR2(10),
     designacao VARCHAR2(100),
     mandatos_distrito partido_mandatos,
-    votos_distrito partido_votos
+    votos_distrito partido_votos,
+    map member function get_sigla return varchar2
 );
+
+CREATE OR REPLACE TYPE BODY partido_t AS
+    map member function get_sigla return varchar2 is
+        begin 
+        return sigla;
+        end get_sigla;
+end;
 
 CREATE OR REPLACE TYPE lista_t AS OBJECT(
     partido REF partido_t,
@@ -145,48 +155,3 @@ CREATE TABLE concelhos OF concelho_t;
 
 CREATE TABLE freguesias OF freguesia_t 
     NESTED TABLE votacoes STORE AS votacoes_tab;
-    
---------------------------------------------------------
-----------------   PL/SQL FUNCTIONS   ------------------   
---------------------------------------------------------
-
-PROCEDURE FILL_PARTIDO_MANDATOS
-IS
-DECLARE
-mandatosArray  partido_mandatos := partido_mandatos(null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null);
-DistritoPosArray simple_integer := 1;
-Mandatos varchar2(3) := '';
-
-BEGIN
-
-for p in (select sigla from partidos)
-loop
-for d in (select d.codigo, l.mandatos from distritos d, table(d.listas) l where l.partido.sigla = p.sigla)
-loop
-
-if(d.codigo <= 18)
-then
-DistritoPosArray := d.codigo;
-elsif(d.codigo = 30)
-then
-DistritoPosArray := 19;
-else
-DistritoPosArray := 20;
-end if;
-
-begin
-dbms_output.put_line(DistritoPosArray);
-end;
-mandatosArray(DistritoPosArray) := d.mandatos;
-
-end loop;
-
-UPDATE partidos
-SET mandatos_distrito = mandatosArray
-WHERE partidos.sigla = p.sigla;
-
-mandatosArray := partido_mandatos(null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null);
-DistritoPosArray := 1;
-
-end loop;
-END;
