@@ -6,101 +6,96 @@
 ---------------- FILL_PARTIDO_MANDATOS -----------------   
 --------------------------------------------------------
 
-CREATE OR REPLACE PROCEDURE FILL_PARTIDO_MANDATOS
+CREATE OR REPLACE PROCEDURE fill_partido_mandatos
 IS
-mandatosArray  partido_mandatos := partido_mandatos(null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null);
-DistritoPosArray simple_integer := 1;
-Mandatos varchar2(3) := '';
-
+    mandatosarray  partido_mandatos := partido_mandatos(NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+    distritoposarray SIMPLE_INTEGER := 1;
+    mandatos VARCHAR2(3) := '';
 BEGIN
 
-for p in (select sigla from partidos)
-loop
-for d in (select d.codigo, l.mandatos from distritos d, table(d.listas) l where l.partido.sigla = p.sigla)
-loop
-
-if(d.codigo <= 18)
-then
-DistritoPosArray := d.codigo;
-elsif(d.codigo = 30)
-then
-DistritoPosArray := 19;
-else
-DistritoPosArray := 20;
-end if;
-
-begin
-dbms_output.put_line(DistritoPosArray);
-end;
-mandatosArray(DistritoPosArray) := d.mandatos;
-
-end loop;
-
-UPDATE partidos
-SET mandatos_distrito = mandatosArray
-WHERE partidos.sigla = p.sigla;
-
-mandatosArray := partido_mandatos(null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null);
-DistritoPosArray := 1;
-
-end loop;
+    FOR P IN (SELECT sigla FROM partidos)
+    LOOP
+        FOR D IN (SELECT D.codigo, L.mandatos FROM distritos D, TABLE(D.listas) L WHERE L.partido.sigla = P.sigla)
+        LOOP
+        
+            IF(D.codigo <= 18)
+            THEN
+                distritoposarray := D.codigo;
+            ELSIF(D.codigo = 30)
+            THEN
+                distritoposarray := 19;
+            ELSE
+                distritoposarray := 20;
+            END IF;
+            
+            mandatosarray(distritoposarray) := D.mandatos;
+        
+        END LOOP;
+        
+        UPDATE partidos
+        SET mandatos_distrito = mandatosarray
+        WHERE partidos.sigla = P.sigla;
+        
+        mandatosarray := partido_mandatos(NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+        distritoposarray := 1;
+    
+    END LOOP;
 END;
 
 --------------------------------------------------------
 ----------------- FILL_PARTIDO_VOTOS -------------------   
 --------------------------------------------------------
 
-CREATE OR REPLACE PROCEDURE FILL_PARTIDO_VOTOS
+CREATE OR REPLACE PROCEDURE fill_partido_votos
 IS
-votosArray  partido_votos := partido_votos(null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null);
-DistritoPosArray simple_integer := 1;
-Votos varchar2(10) := '';
-
+    votosarray  partido_votos := partido_votos(NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+    distritoposarray SIMPLE_INTEGER := 1;
+    votos VARCHAR2(10) := '';
 BEGIN
 
-for p in (select sigla from partidos)
-loop
-for d in (select codigo from distritos)
-loop
-
-BEGIN
-        select sum(x.votos) into Votos
-        from freguesias f, table(f.votacoes) x
-        where x.partido.sigla = p.sigla AND f.concelho.codigo IN
-        (select codigo
-        from concelhos c
-        where c.distrito.codigo = d.codigo)
-        group by x.partido.sigla;
-    EXCEPTION
-      WHEN NO_DATA_FOUND THEN
-        Votos := NULL;
-END;
-
-if(d.codigo <= 18)
-then
-DistritoPosArray := d.codigo;
-elsif(d.codigo = 30)
-then
-DistritoPosArray := 19;
-else
-DistritoPosArray := 20;
-end if;
-
-if NOT (Votos IS NULL)
-then
-votosArray(DistritoPosArray) := TO_NUMBER(Votos);
-end if;
-
-end loop;
-
-UPDATE partidos
-SET votos_distrito = votosArray
-WHERE partidos.sigla = p.sigla;
-
-votosArray := partido_votos(null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null);
-DistritoPosArray := 1;
-
-end loop;
+    FOR P IN (SELECT sigla FROM partidos)
+    LOOP
+        FOR D IN (SELECT codigo FROM distritos)
+        LOOP
+        
+            BEGIN
+                SELECT SUM(x.votos) INTO votos
+                FROM freguesias F, TABLE(F.votacoes) x
+                WHERE x.partido.sigla = P.sigla AND F.concelho.codigo IN
+                (SELECT codigo
+                FROM concelhos C
+                WHERE C.distrito.codigo = D.codigo)
+                GROUP BY x.partido.sigla;
+                EXCEPTION
+                  WHEN no_data_found THEN
+                    votos := NULL;
+            END;
+            
+            IF(D.codigo <= 18)
+            THEN
+                distritoposarray := D.codigo;
+            ELSIF(D.codigo = 30)
+            THEN
+                distritoposarray := 19;
+            ELSE
+                distritoposarray := 20;
+            END IF;
+            
+            IF NOT (votos IS NULL)
+            THEN
+                votosarray(distritoposarray) := to_number(votos);
+            END IF;
+        
+        END LOOP;
+        
+        UPDATE partidos
+        SET votos_distrito = votosarray
+        WHERE partidos.sigla = P.sigla;
+        
+        votosarray := partido_votos(NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+        distritoposarray := 1;
+    
+    END LOOP;
 END;
 
 --------------------------------------------------------
@@ -113,18 +108,21 @@ END;
 CREATE OR REPLACE FUNCTION GET_PARTIDO_MAIS_VOTADO(codigoDistrito distritos.codigo%TYPE)
 RETURN partidos.sigla%TYPE
 IS
-Sigla partidos.sigla%TYPE;
+    Sigla partidos.sigla%TYPE;
 BEGIN
+    
     SELECT x.partido.sigla INTO Sigla
     FROM freguesias F, TABLE(F.votacoes) x
     WHERE F.concelho.codigo IN
-    (SELECT codigo
-    FROM concelhos C
-    WHERE C.distrito.codigo = codigoDistrito)
+        (SELECT codigo
+        FROM concelhos C
+        WHERE C.distrito.codigo = codigoDistrito)
     GROUP BY x.partido.sigla
     ORDER BY SUM(x.votos) DESC
     FETCH FIRST ROW ONLY;
+    
 RETURN Sigla;
+
 END;
 
 --------------------------------------------------------
@@ -133,18 +131,18 @@ END;
 
 CREATE OR REPLACE PROCEDURE get_distritos_vencedor(siglapartido partidos.sigla%TYPE)
 IS
-sigla partidos.sigla%TYPE := '';
-ret_distritos VARCHAR2(1000) := '';
+    sigla partidos.sigla%TYPE := '';
+    ret_distritos VARCHAR2(1000) := '';
 BEGIN
     FOR D IN (SELECT codigo, nome FROM distritos)
     LOOP
-    sigla := get_partido_mais_votado(D.codigo);
-
-    IF sigla = siglapartido
-    THEN
-    ret_distritos := ret_distritos || D.nome || CHR(10);
-    END IF;
-
+        sigla := get_partido_mais_votado(D.codigo);
+    
+        IF sigla = siglapartido
+        THEN
+            ret_distritos := ret_distritos || D.nome || CHR(10);
+        END IF;
+    
     END LOOP; 
     
     dbms_output.put_line(ret_distritos);
@@ -156,26 +154,26 @@ END;
 
 CREATE OR REPLACE PROCEDURE get_distritos_maioria(siglapartido partidos.sigla%TYPE)
 IS
-sigla partidos.sigla%TYPE := '';
-ret_distritos VARCHAR2(1000) := '';
-mandatos_proprio simple_integer := 0;
-mandatos_outros simple_integer := 0;
+    sigla partidos.sigla%TYPE := '';
+    ret_distritos VARCHAR2(1000) := '';
+    mandatos_proprio simple_integer := 0;
+    mandatos_outros simple_integer := 0;
 BEGIN
     FOR D IN (SELECT codigo, nome FROM distritos)
     LOOP
 
-    select l.mandatos into mandatos_proprio
-    from distritos dist, table(dist.listas) l
-    where dist.codigo = D.codigo and l.partido.sigla = siglapartido;
-    
-    select sum(l.mandatos) into mandatos_outros
-    from distritos dist, table(dist.listas) l
-    where dist.codigo = D.codigo and l.partido.sigla <> siglapartido;
-    
-    IF mandatos_proprio > mandatos_outros
-    THEN
-    ret_distritos := ret_distritos || D.nome || CHR(10);
-    END IF;
+        SELECT L.mandatos INTO mandatos_proprio
+        FROM distritos dist, TABLE(dist.listas) L
+        WHERE dist.codigo = D.codigo AND L.partido.sigla = siglapartido;
+        
+        SELECT SUM(L.mandatos) INTO mandatos_outros
+        FROM distritos dist, TABLE(dist.listas) L
+        WHERE dist.codigo = D.codigo AND L.partido.sigla <> siglapartido;
+        
+        IF mandatos_proprio > mandatos_outros
+        THEN
+            ret_distritos := ret_distritos || D.nome || CHR(10);
+        END IF;
 
     END LOOP; 
     
@@ -188,18 +186,21 @@ END;
 
 CREATE OR REPLACE PROCEDURE get_partido_mais_votado_distr(nomedistrito distritos.nome%TYPE)
 IS
-sigla partidos.sigla%TYPE;
+    sigla partidos.sigla%TYPE;
 BEGIN
+
     SELECT x.partido.sigla INTO sigla
     FROM freguesias F, TABLE(F.votacoes) x
     WHERE F.concelho.codigo IN
-    (SELECT codigo
-    FROM concelhos C
-    WHERE C.distrito.nome = nomedistrito)
+        (SELECT codigo
+        FROM concelhos C
+        WHERE C.distrito.nome = nomedistrito)
     GROUP BY x.partido.sigla
-    ORDER BY SUM(x.votos) DESC
+    ORDER BY SUM(x.votos) DESC  
     FETCH FIRST ROW ONLY;
-dbms_output.put_line(sigla);
+
+    dbms_output.put_line(sigla);
+
 END;
 
 --------------------------------------------------------
@@ -208,10 +209,10 @@ END;
 
 CREATE OR REPLACE PROCEDURE get_partido_maioria_distr(nomedistrito distritos.nome%TYPE)
 IS
-nome distritos.nome%TYPE := '';
-nomePartido VARCHAR2(10) := '';
-mandatos_max SIMPLE_INTEGER := 0;
-mandatos_outros SIMPLE_INTEGER := 0;
+    nome distritos.nome%TYPE := '';
+    nomePartido VARCHAR2(10) := '';
+    mandatos_max SIMPLE_INTEGER := 0;
+    mandatos_outros SIMPLE_INTEGER := 0;
 BEGIN
 
     SELECT L.partido.sigla, L.mandatos
@@ -227,10 +228,11 @@ BEGIN
 
     IF mandatos_max > mandatos_outros
     THEN
-    dbms_output.put_line(nomePartido);
+        dbms_output.put_line(nomePartido);
     ELSE
-    dbms_output.put_line('Nenhum partido obteve maioria absoluta no distrito de ' || nomedistrito);
+        dbms_output.put_line('Nenhum partido obteve maioria absoluta no distrito de ' || nomedistrito);
     END IF;
+
 END;
 
 --------------------------------------------------------
@@ -240,13 +242,16 @@ END;
 CREATE OR REPLACE FUNCTION GET_DISTRITO_MAIS_INSCRITOS
 RETURN distritos.nome%TYPE
 IS
-Nome distritos.nome%TYPE;
+    Nome distritos.nome%TYPE;
 BEGIN
-SELECT D.nome INTO Nome
-FROM distritos D
-ORDER BY D.participacoes.inscritos DESC
-FETCH FIRST ROW ONLY;
+
+    SELECT D.nome INTO Nome
+    FROM distritos D
+    ORDER BY D.participacoes.inscritos DESC
+    FETCH FIRST ROW ONLY;
+
 RETURN Nome;
+
 END;
 
 --------------------------------------------------------
@@ -256,13 +261,16 @@ END;
 CREATE OR REPLACE FUNCTION GET_DISTRITO_MAIS_VOTANTES
 RETURN distritos.nome%TYPE
 IS
-Nome distritos.nome%TYPE;
+    Nome distritos.nome%TYPE;
 BEGIN
-SELECT D.nome INTO Nome
-FROM distritos D
-ORDER BY D.participacoes.votantes DESC
-FETCH FIRST ROW ONLY;
+    
+    SELECT D.nome INTO Nome
+    FROM distritos D
+    ORDER BY D.participacoes.votantes DESC
+    FETCH FIRST ROW ONLY;
+
 RETURN Nome;
+
 END;
 
 --------------------------------------------------------
@@ -272,13 +280,16 @@ END;
 CREATE OR REPLACE FUNCTION GET_DISTRITO_MAIS_ABSTENCOES
 RETURN distritos.nome%TYPE
 IS
-Nome distritos.nome%TYPE;
+    Nome distritos.nome%TYPE;
 BEGIN
-SELECT D.nome INTO Nome
-FROM distritos D
-ORDER BY D.participacoes.abstencoes DESC
-FETCH FIRST ROW ONLY;
+
+    SELECT D.nome INTO Nome
+    FROM distritos D
+    ORDER BY D.participacoes.abstencoes DESC
+    FETCH FIRST ROW ONLY;
+
 RETURN Nome;
+
 END;
 
 --------------------------------------------------------
@@ -288,13 +299,16 @@ END;
 CREATE OR REPLACE FUNCTION GET_DISTRITO_MAIS_BRANCOS
 RETURN distritos.nome%TYPE
 IS
-Nome distritos.nome%TYPE;
+    Nome distritos.nome%TYPE;
 BEGIN
-SELECT D.nome INTO Nome
-FROM distritos D
-ORDER BY D.participacoes.brancos DESC
-FETCH FIRST ROW ONLY;
+
+    SELECT D.nome INTO Nome
+    FROM distritos D
+    ORDER BY D.participacoes.brancos DESC
+    FETCH FIRST ROW ONLY;
+
 RETURN Nome;
+
 END;
 
 --------------------------------------------------------
@@ -304,13 +318,16 @@ END;
 CREATE OR REPLACE FUNCTION GET_DISTRITO_MAIS_NULOS
 RETURN distritos.nome%TYPE
 IS
-Nome distritos.nome%TYPE;
+    Nome distritos.nome%TYPE;
 BEGIN
-SELECT D.nome INTO Nome
-FROM distritos D
-ORDER BY D.participacoes.nulos DESC
-FETCH FIRST ROW ONLY;
+
+    SELECT D.nome INTO Nome
+    FROM distritos D
+    ORDER BY D.participacoes.nulos DESC
+    FETCH FIRST ROW ONLY;
+
 RETURN Nome;
+
 END;
 
 --------------------------------------------------------
@@ -320,13 +337,16 @@ END;
 CREATE OR REPLACE FUNCTION GET_DISTRITO_MAIOR_RACIO_VOTANTES_INSCRITOS
 RETURN distritos.nome%TYPE
 IS
-Nome distritos.nome%TYPE;
+    Nome distritos.nome%TYPE;
 BEGIN
-SELECT D.nome INTO NOME
-FROM distritos D
-ORDER BY D.participacoes.votantes/D.participacoes.inscritos DESC
-FETCH FIRST ROW ONLY;
+    
+    SELECT D.nome INTO NOME
+    FROM distritos D
+    ORDER BY D.participacoes.votantes/D.participacoes.inscritos DESC
+    FETCH FIRST ROW ONLY;
+
 RETURN Nome;
+
 END;
 
 --------------------------------------------------------
@@ -336,11 +356,14 @@ END;
 CREATE OR REPLACE FUNCTION GET_DISTR_MAIOR_RACIO_NUL_VOT
 RETURN distritos.nome%TYPE
 IS
-Nome distritos.nome%TYPE;
+    Nome distritos.nome%TYPE;
 BEGIN
-SELECT D.nome INTO NOME
-FROM distritos D
-ORDER BY D.participacoes.nulos/D.participacoes.votantes DESC
-FETCH FIRST ROW ONLY;
+    
+    SELECT D.nome INTO NOME
+    FROM distritos D
+    ORDER BY D.participacoes.nulos/D.participacoes.votantes DESC
+    FETCH FIRST ROW ONLY;
+
 RETURN Nome;
+
 END;
