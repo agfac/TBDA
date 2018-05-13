@@ -53,7 +53,9 @@ CREATE OR REPLACE TYPE partido_t AS OBJECT(
     designacao VARCHAR2(100),
     mandatos_distrito partido_mandatos,
     votos_distrito partido_votos,
-    map member function get_sigla return varchar2
+    map member function get_sigla return varchar2,
+    member function get_total_mandatos return number,
+    member function get_total_votos return number
 );
 
 CREATE OR REPLACE TYPE BODY partido_t AS
@@ -61,6 +63,30 @@ CREATE OR REPLACE TYPE BODY partido_t AS
         begin 
         return sigla;
         end get_sigla;
+    member function get_total_mandatos return number is
+        total number(3) := 0;
+        begin
+        for m in 1..mandatos_distrito.count
+        loop
+        if not(mandatos_distrito(m) is null)
+        then
+        total := total + mandatos_distrito(m);
+        end if;
+        end loop;
+        return total;
+        end get_total_mandatos;
+    member function get_total_votos return number is
+        total number(7) := 0;
+        begin
+        for m in 1..votos_distrito.count
+        loop
+        if not(votos_distrito(m) is null)
+        then
+        total := total + votos_distrito(m);
+        end if;
+        end loop;
+        return total;
+        end get_total_votos;
 end;
 
 CREATE OR REPLACE TYPE lista_t AS OBJECT(

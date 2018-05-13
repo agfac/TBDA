@@ -8,7 +8,6 @@
 
 CREATE OR REPLACE PROCEDURE FILL_PARTIDO_MANDATOS
 IS
-DECLARE
 mandatosArray  partido_mandatos := partido_mandatos(null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null);
 DistritoPosArray simple_integer := 1;
 Mandatos varchar2(3) := '';
@@ -53,7 +52,6 @@ END;
 
 CREATE OR REPLACE PROCEDURE FILL_PARTIDO_VOTOS
 IS
-DECLARE
 votosArray  partido_votos := partido_votos(null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null);
 DistritoPosArray simple_integer := 1;
 Votos varchar2(10) := '';
@@ -65,10 +63,6 @@ loop
 for d in (select codigo from distritos)
 loop
 
-
-begin
-dbms_output.put_line('distrito '|| d.codigo);
-end;
 BEGIN
         select sum(x.votos) into Votos
         from freguesias f, table(f.votacoes) x
@@ -81,10 +75,6 @@ BEGIN
       WHEN NO_DATA_FOUND THEN
         Votos := NULL;
 END;
-
-begin
-dbms_output.put_line(Votos);
-end;
 
 if(d.codigo <= 18)
 then
