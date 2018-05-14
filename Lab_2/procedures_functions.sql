@@ -334,7 +334,7 @@ END;
 ----- GET_DISTRITO_MAIOR_RACIO_VOTANTES_INSCRITOS ------
 --------------------------------------------------------
 
-CREATE OR REPLACE FUNCTION GET_DISTRITO_MAIOR_RACIO_VOTANTES_INSCRITOS
+CREATE OR REPLACE FUNCTION GET_DISTR_MAIOR_RACIO_VOT_INSC
 RETURN distritos.nome%TYPE
 IS
     Nome distritos.nome%TYPE;
@@ -343,6 +343,44 @@ BEGIN
     SELECT D.nome INTO NOME
     FROM distritos D
     ORDER BY D.participacoes.votantes/D.participacoes.inscritos DESC
+    FETCH FIRST ROW ONLY;
+
+RETURN Nome;
+
+END;
+
+--------------------------------------------------------
+---- GET_DISTRITO_MAIOR_RACIO_ABSTENCOES_INSCRITOS -----
+--------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION GET_DISTR_MAIOR_RACIO_ABS_INSC
+RETURN distritos.nome%TYPE
+IS
+    Nome distritos.nome%TYPE;
+BEGIN
+    
+    SELECT D.nome INTO NOME
+    FROM distritos D
+    ORDER BY D.participacoes.abstencoes/D.participacoes.inscritos DESC
+    FETCH FIRST ROW ONLY;
+
+RETURN Nome;
+
+END;
+
+--------------------------------------------------------
+------ GET_DISTRITO_MAIOR_RACIO_BRANCOS_VOTANTES -------
+--------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION GET_DISTR_MAIOR_RACIO_BRNC_VOT
+RETURN distritos.nome%TYPE
+IS
+    Nome distritos.nome%TYPE;
+BEGIN
+    
+    SELECT D.nome INTO NOME
+    FROM distritos D
+    ORDER BY D.participacoes.brancos/D.participacoes.votantes DESC
     FETCH FIRST ROW ONLY;
 
 RETURN Nome;
